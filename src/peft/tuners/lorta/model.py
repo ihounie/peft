@@ -36,7 +36,6 @@ from peft.tuners.tuners_utils import (
 from peft.utils import (
     TRANSFORMERS_MODELS_TO_LORTA_PREFIX_MAPPING,
     TRANSFORMERS_MODELS_TO_LORTA_QKVO_MAPPING,
-    TRANSFORMERS_MODELS_TO_LORTA_SUFFIX_MAPPING,
     TRANSFORMERS_MODELS_TO_LORTA_TARGET_MODULES_MAPPING,
     ModulesToSaveWrapper,
     _get_submodules,
@@ -135,9 +134,7 @@ class LorTaModel(BaseTuner):
         super().__init__(model, config, adapter_name)
 
     def _map_layer_to_adapter(self, layer_idx: int, target_matrix: str) -> str:
-        return ".".join(
-            [self.target_names_prefix, f"{layer_idx}", self.target_names_suffix, self.qkvo_mapping[target_matrix]]
-        )
+        return ".".join([self.target_names_prefix, f"{layer_idx}", self.qkvo_mapping[target_matrix]])
 
     def _compute_weights_from_tensor(self):
         weights = {}
@@ -193,6 +190,7 @@ class LorTaModel(BaseTuner):
 
     def forward(self, *args, **kwargs):
         self.tensor_weights = self._compute_weights_from_tensor()
+        # print("*"*100)
         # print(self.tensor_weights.keys())
         # kwargs["adapter_weight"] = weights
         return self.model.forward(*args, **kwargs)
@@ -223,7 +221,6 @@ class LorTaModel(BaseTuner):
         if hasattr(model_config, "to_dict"):
             model_config = model_config.to_dict()
 
-        self.target_names_suffix = TRANSFORMERS_MODELS_TO_LORTA_SUFFIX_MAPPING.get(model_config["model_type"], None)
         self.target_names_prefix = TRANSFORMERS_MODELS_TO_LORTA_PREFIX_MAPPING.get(model_config["model_type"], None)
         self.qkvo_mapping = TRANSFORMERS_MODELS_TO_LORTA_QKVO_MAPPING.get(model_config["model_type"], None)
 
@@ -601,7 +598,7 @@ class LorTaModel(BaseTuner):
 
         hook_handles = []
         names_with_hooks = []
-        for name, module in self.model.model.named_modules():
+        for name, module in self.model.named_modules():
             if isinstance(module, LorTaLayer) or isinstance(module, LorTaLinear):
                 pre_forward = partial(self.weights_pre_forward_hook, module_name=name)
                 # old_module_name = self.adapter_module_to_name[module.base_layer]

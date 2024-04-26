@@ -38,7 +38,6 @@ from .constants import (
     TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING,
     TRANSFORMERS_MODELS_TO_LORTA_PREFIX_MAPPING,
     TRANSFORMERS_MODELS_TO_LORTA_QKVO_MAPPING,
-    TRANSFORMERS_MODELS_TO_LORTA_SUFFIX_MAPPING,
     TRANSFORMERS_MODELS_TO_LORTA_TARGET_MODULES_MAPPING,
     TRANSFORMERS_MODELS_TO_PREFIX_TUNING_POSTPROCESS_MAPPING,
     WEIGHTS_NAME,
@@ -58,7 +57,6 @@ __all__ = [
     "TRANSFORMERS_MODELS_TO_PREFIX_TUNING_POSTPROCESS_MAPPING",
     "TRANSFORMERS_MODELS_TO_LORTA_TARGET_MODULES_MAPPING",
     "TRANSFORMERS_MODELS_TO_LORTA_PREFIX_MAPPING",
-    "TRANSFORMERS_MODELS_TO_LORTA_SUFFIX_MAPPING",
     "TRANSFORMERS_MODELS_TO_LORTA_QKVO_MAPPING",
     "WEIGHTS_NAME",
     "INCLUDE_LINEAR_LAYERS_SHORTHAND",
@@ -308,7 +306,6 @@ def _freeze_adapter(model, adapter_name):
 
 
 def _set_trainable(model, adapter_name):
-    assert 0
     key_list = [key for key, _ in model.named_modules()]
     for key in key_list:
         target_module_found = any(key.endswith(target_key) for target_key in model.modules_to_save)

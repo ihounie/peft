@@ -152,21 +152,22 @@ TRANSFORMERS_MODELS_TO_ADALORA_TARGET_MODULES_MAPPING = {
 
 TRANSFORMERS_MODELS_TO_LORTA_TARGET_MODULES_MAPPING = {
     "llama": ["q_proj", "k_proj", "v_proj", "o_proj"],
-    "roberta": ["query", "key", "value", "output.dense"],
+    "roberta": ["query", "key", "value", "attention.output.dense"],
 }
 
 TRANSFORMERS_MODELS_TO_LORTA_PREFIX_MAPPING = {
-    "llama": "layers",
-    "roberta": "encoder.layer",
-}
-TRANSFORMERS_MODELS_TO_LORTA_SUFFIX_MAPPING = {
-    "llama": "self_attn",
-    "roberta": "attention",
+    "llama": "model.layers",
+    "roberta": "roberta.encoder.layer",
 }
 
 TRANSFORMERS_MODELS_TO_LORTA_QKVO_MAPPING = {
-    "llama": {"q": "q_proj", "k": "k_proj", "v": "v_proj", "o": "o_proj"},
-    "roberta": {"q": "self.query", "k": "self.key", "v": "self.value", "o": "output.dense"},
+    "llama": {"q": "self_attn.q_proj", "k": "self_attn.k_proj", "v": "self_attn.v_proj", "o": "self_attn.o_proj"},
+    "roberta": {
+        "q": "attention.self.query",
+        "k": "attention.self.key",
+        "v": "attention.self.value",
+        "o": "attention.output.dense",
+    },
 }
 
 WEIGHTS_NAME = "adapter_model.bin"
