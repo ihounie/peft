@@ -300,6 +300,7 @@ def _freeze_adapter(model, adapter_name):
 
 
 def _set_trainable(model, adapter_name):
+    assert 0
     key_list = [key for key, _ in model.named_modules()]
     for key in key_list:
         target_module_found = any(key.endswith(target_key) for target_key in model.modules_to_save)
@@ -419,6 +420,15 @@ def fsdp_auto_wrap_policy(model):
 
 
 def transpose(weight, fan_in_fan_out):
+    if not fan_in_fan_out:
+        return weight
+
+    if isinstance(weight, torch.nn.Parameter):
+        return torch.nn.Parameter(weight.T)
+    return weight.T
+
+
+def transposer(weight, fan_in_fan_out):
     if not fan_in_fan_out:
         return weight
 
