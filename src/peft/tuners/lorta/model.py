@@ -34,7 +34,10 @@ from peft.tuners.tuners_utils import (
     replicate_layers,
 )
 from peft.utils import (
-    TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING,
+    TRANSFORMERS_MODELS_TO_LORTA_PREFIX_MAPPING,
+    TRANSFORMERS_MODELS_TO_LORTA_QKVO_MAPPING,
+    TRANSFORMERS_MODELS_TO_LORTA_SUFFIX_MAPPING,
+    TRANSFORMERS_MODELS_TO_LORTA_TARGET_MODULES_MAPPING,
     ModulesToSaveWrapper,
     _get_submodules,
     get_quantization_config,
@@ -130,9 +133,11 @@ class LorTaModel(BaseTuner):
 
     def __init__(self, model, config, adapter_name) -> None:
         super().__init__(model, config, adapter_name)
-        # print("*"*100)
-        # print("Long live tensors, Using LorTaModel!")
-        # print("*"*100)
+
+    def _map_layer_to_adapter(self, layer_idx: int, target_matrix: str) -> str:
+        return ".".join(
+            [self.target_names_prefix, f"{layer_idx}", self.target_names_suffix, self.qkvo_mapping[target_matrix]]
+        )
 
     def _compute_weights_from_tensor(self):
         weights = {}
@@ -140,7 +145,7 @@ class LorTaModel(BaseTuner):
         # print(self.adapter_name_to_module)
         # print("*"*100)
         for block_idx in range(self.model.config.num_hidden_layers):
-            weights[f"layers.{block_idx}.self_attn.q_proj"] = torch.cat(
+            weights[self._map_layer_to_adapter(block_idx, "q")] = torch.cat(
                 [
                     self.model.lora_A
                     @ torch.diag(
@@ -151,7 +156,7 @@ class LorTaModel(BaseTuner):
                 ],
                 dim=1,
             )
-            weights[f"layers.{block_idx}.self_attn.k_proj"] = torch.cat(
+            weights[self._map_layer_to_adapter(block_idx, "k")] = torch.cat(
                 [
                     self.model.lora_A
                     @ torch.diag(
@@ -162,7 +167,7 @@ class LorTaModel(BaseTuner):
                 ],
                 dim=1,
             )
-            weights[f"layers.{block_idx}.self_attn.v_proj"] = torch.cat(
+            weights[self._map_layer_to_adapter(block_idx, "v")] = torch.cat(
                 [
                     self.model.lora_A
                     @ torch.diag(
@@ -173,7 +178,7 @@ class LorTaModel(BaseTuner):
                 ],
                 dim=1,
             )
-            weights[f"layers.{block_idx}.self_attn.o_proj"] = torch.cat(
+            weights[self._map_layer_to_adapter(block_idx, "o")] = torch.cat(
                 [
                     self.model.lora_A
                     @ torch.diag(
@@ -217,6 +222,10 @@ class LorTaModel(BaseTuner):
         model_config = getattr(model, "config", {"model_type": "custom"})
         if hasattr(model_config, "to_dict"):
             model_config = model_config.to_dict()
+
+        self.target_names_suffix = TRANSFORMERS_MODELS_TO_LORTA_SUFFIX_MAPPING.get(model_config["model_type"], None)
+        self.target_names_prefix = TRANSFORMERS_MODELS_TO_LORTA_PREFIX_MAPPING.get(model_config["model_type"], None)
+        self.qkvo_mapping = TRANSFORMERS_MODELS_TO_LORTA_QKVO_MAPPING.get(model_config["model_type"], None)
 
         peft_config = self._prepare_adapter_config(peft_config, model_config)
 
@@ -623,10 +632,10 @@ class LorTaModel(BaseTuner):
     @staticmethod
     def _prepare_adapter_config(peft_config, model_config):
         if peft_config.target_modules is None:
-            if model_config["model_type"] not in TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING:
+            if model_config["model_type"] not in TRANSFORMERS_MODELS_TO_LORTA_TARGET_MODULES_MAPPING:
                 raise ValueError("Please specify `target_modules` in `peft_config`")
             peft_config.target_modules = set(
-                TRANSFORMERS_MODELS_TO_LORA_TARGET_MODULES_MAPPING[model_config["model_type"]]
+                TRANSFORMERS_MODELS_TO_LORTA_TARGET_MODULES_MAPPING[model_config["model_type"]]
             )
         return peft_config
 
