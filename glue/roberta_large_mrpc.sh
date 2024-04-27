@@ -1,4 +1,8 @@
-torchrun --nproc_per_node=4 run_glue.py \
+WANDB_PROJECT="lorta-glue"
+for rank in 1 2 4 8 16 32 64 128 256
+do
+    echo "Running with rank $rank"
+    CUDA_VISIBLE_DEVICES=0 python run_glue.py \
          --wandb_offline 1 \
          --do_train \
          --do_eval \
@@ -19,10 +23,11 @@ torchrun --nproc_per_node=4 run_glue.py \
          --max_seq_length 128 \
          --task_name mrpc \
          --num_train_epochs 40 \
-         --mode elora \
-         --lora_r 256 \
+         --mode lora \
+         --lora_r $rank \
          --init_type 1 \
          --d_init_type 94 \
          --seed 42 \
          --classifier_lr 3e-3 \
          --learning_rate 3e-2
+done

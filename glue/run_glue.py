@@ -650,7 +650,7 @@ def main():
             if param.requires_grad:
                 trainable_params += param.numel()
         print(
-            f"real trainable params: {trainable_params-1181188} || trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param:.2f}"
+            f"trainable params: {trainable_params} || all params: {all_param} || trainable%: {100 * trainable_params / all_param:.2f}"
         )
 
     print(model)
@@ -727,7 +727,7 @@ def main():
                 if attr_str == "trainer":  # Skip the trainer attribute
                     continue
                 else:
-                    target_attr = getattr(module, attr_str)
+                    target_attr = getattr(module, attr_str, None)
                     if type(target_attr) in (torch.Tensor, torch.nn.Parameter):
                         if id(target_attr) not in unique_tensors:  # Check if the tensor was already counted
                             if ("classifier" not in name or model_args.finetune_classifier == 1) and (
@@ -739,16 +739,6 @@ def main():
 
         return total_params
 
-    """
-    params_trainable = get_parameters_count(model, requires_grad=True)
-    params_total = get_parameters_count(model, requires_grad=False)
-
-    print(f"Trainable parameters: {params_trainable}")
-    print(f"Total number of parameters: {params_total}")
-    if is_first_rank:
-        wandb.config.update({"params_trainable": params_trainable, "params_total": params_total})
-        wandb.log({"params_trainable": params_trainable, "params_total": params_total})
-
     # trainable_params = []
     # if model_args.apply_lora:
     #     if model_args.lora_path is not None:
@@ -757,7 +747,7 @@ def main():
     #         logger.info(lora_state_dict.keys())
     #         model.load_state_dict(lora_state_dict, strict=False)
     #     trainable_params.append("lora")
-    """
+
     # if model_args.apply_adapter:
     #     if model_args.adapter_path is not None:
     #         adapter_state_dict = torch.load(
@@ -955,6 +945,15 @@ def main():
     )
     trainer.create_optimizer()
     # print(trainer.optimizer)
+
+    params_trainable = get_parameters_count(model, requires_grad=True)
+    params_total = get_parameters_count(model, requires_grad=False)
+
+    print(f"Trainable parameters: {params_trainable}")
+    print(f"Total number of parameters: {params_total}")
+    if is_first_rank:
+        wandb.config.update({"params_trainable": params_trainable, "params_total": params_total})
+        wandb.log({"params_trainable": params_trainable, "params_total": params_total})
 
     # Training
     if training_args.do_train:

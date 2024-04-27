@@ -1,5 +1,8 @@
-CUDA_VISIBLE_DEVICES=1 python run_glue.py \
-         --wandb_offline 1 \
+WANDB_PROJECT="lorta-glue"
+for rank in 1 2 4 8 16 32 64 128 256
+do
+    echo "Running with rank $rank"
+    CUDA_VISIBLE_DEVICES=1 python run_glue.py \
          --do_train \
          --do_eval \
          --gradient_accumulation_steps 1 \
@@ -18,7 +21,7 @@ CUDA_VISIBLE_DEVICES=1 python run_glue.py \
          --per_device_train_batch_size 64 \
          --max_seq_length 128 \
          --mode lora \
-         --lora_r 512 \
+         --lora_r ${rank} \
          --init_type 1 \
          --d_init_type 94 \
          --seed 42 \
@@ -26,3 +29,4 @@ CUDA_VISIBLE_DEVICES=1 python run_glue.py \
          --num_train_epochs 30 \
          --classifier_lr 2e-2 \
          --learning_rate 1e-2
+done
