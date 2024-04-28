@@ -55,6 +55,8 @@ from peft import LorTaConfig as LoraConfig
 from peft import TaskType, get_peft_model
 
 
+save_full_weights = False
+push_weights = True
 _dirs = ["weights", "output", "runs"]
 for _dir in _dirs:
     if not os.path.exists(_dir):
@@ -975,9 +977,9 @@ def main():
 
         weights = {}
         for n, p in model.named_parameters():
-            if ".lora_d." in n or ".lora_da." in n or ".lora_db." in n:
+            if ".lora_":
                 weights[n] = p.detach().cpu().numpy()
-        if is_first_rank:
+        if save_full_weights:
             with open(
                 os.path.join(
                     "weights",
@@ -986,6 +988,13 @@ def main():
                 "wb",
             ) as f:
                 pickle.dump(weights, f)
+        if push_weights:
+            wandb.save(
+                os.path.join(
+                    "output/model",
+                    "adapter_model.safetensors",
+                )
+            )
 
         trainer.save_model()  # Saves the tokenizer too for easy upload
 
