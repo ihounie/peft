@@ -10,8 +10,8 @@ def generate_config(rank, task_name, model_name):
         "mrpc": {"epochs": 30, "classifier_lr": 4.00e-3, "learning_rate": 1.00e-2},
         "cola": {"epochs": 80, "classifier_lr": 1.00e-2, "learning_rate": 1.00e-2},
         "qnli": {"epochs": 25, "classifier_lr": 4.00e-3, "learning_rate": 1.00e-2},
-        "rte": {"epochs": 160, "classifier_lr": 1.00e-2, "learning_rate": 4.00e-3},
-        "stsb": {"epochs": 80, "classifier_lr": 1.00e-2, "learning_rate": 1.00e-2},
+        "rte": {"epochs": 160, "classifier_lr": 1.00e-2, "learning_rate": 1.00e-2},# 4.00e-3 in VeRA
+        "stsb": {"epochs": 80, "classifier_lr": 5.00e-3, "learning_rate": 5.00e-2},#1.00e-2 1.00e-2 in VeRA
     }
 
     # Settings for roberta-large
@@ -64,6 +64,7 @@ def generate_config(rank, task_name, model_name):
         os.makedirs("configs")
 
     file_name = f"configs/{model_name}_{task_name}_r={rank}.json"
+    print("writing file to: ", file_name)
     with open(file_name, "w") as json_file:
         json.dump(config, json_file, indent=4)
 
