@@ -153,7 +153,7 @@ class LorTaModel(BaseTuner):
                 ],
                 dim=1,
             )
-            weights[self._map_layer_to_adapter(block_idx, "k")] = torch.cat(
+            weights[self._map_layer_to_adapter(block_idx, "v")] = torch.cat(
                 [
                     self.model.lora_A
                     @ torch.diag(
@@ -164,17 +164,7 @@ class LorTaModel(BaseTuner):
                 ],
                 dim=1,
             )
-            weights[self._map_layer_to_adapter(block_idx, "v")] = torch.cat(
-                [
-                    self.model.lora_A
-                    @ torch.diag(
-                        self.model.lora_C_h[head_idx] * self.model.lora_C_m[2] * self.model.lora_C_l[block_idx]
-                    )
-                    @ self.model.lora_B
-                    for head_idx in range(self.model.config.num_attention_heads)
-                ],
-                dim=1,
-            )
+            '''
             weights[self._map_layer_to_adapter(block_idx, "o")] = torch.cat(
                 [
                     self.model.lora_A
@@ -186,6 +176,7 @@ class LorTaModel(BaseTuner):
                 ],
                 dim=1,
             )
+        '''
         return weights
 
     def forward(self, *args, **kwargs):
@@ -302,7 +293,8 @@ class LorTaModel(BaseTuner):
         nn.init.kaiming_uniform_(self.model.lora_C_l, a=math.sqrt(5) * peft_config.init_scale)
         self.model.lora_C_h = nn.Parameter(torch.zeros((self.model.config.num_attention_heads,) + C_shape))
         nn.init.kaiming_uniform_(self.model.lora_C_h, a=math.sqrt(5) * peft_config.init_scale)
-        self.model.lora_C_m = nn.Parameter(torch.zeros((4,) + C_shape))
+        # q, v
+        self.model.lora_C_m = nn.Parameter(torch.zeros((2,) + C_shape))
         nn.init.kaiming_uniform_(self.model.lora_C_m, a=math.sqrt(5) * peft_config.init_scale)
 
         self.model.lora_A = nn.Parameter(torch.empty(A_shape))

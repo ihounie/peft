@@ -668,7 +668,7 @@ def main():
     config = LoraConfig(
         r=model_args.lora_r,
         lora_alpha=model_args.lora_alpha,
-        target_modules=["query", "key", "value", "attention.output.dense"],  # target_modules,
+        target_modules=["query", "value"],  # target_modules,
         lora_dropout=0.0,
         bias="none",
         modules_to_save=[] if model_args.finetune_classifier == 1 else ["classifier"],
