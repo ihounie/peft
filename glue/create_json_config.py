@@ -8,10 +8,10 @@ def generate_config(rank, task_name, model_name):
     base_task_settings = {
         "sst2": {"epochs": 60, "classifier_lr": 4.00e-3, "learning_rate": 4.00e-3},
         "mrpc": {"epochs": 30, "classifier_lr": 4.00e-3, "learning_rate": 1.00e-2},
-        "cola": {"epochs": 80, "classifier_lr": 1.00e-2, "learning_rate": 1.00e-2},
+        "cola": {"epochs": 80, "classifier_lr": 1.00e-3, "learning_rate": 1.00e-2},  # 1.00e-2  1.00e-02 in VeRA
         "qnli": {"epochs": 25, "classifier_lr": 4.00e-3, "learning_rate": 1.00e-2},
-        "rte": {"epochs": 160, "classifier_lr": 1.00e-2, "learning_rate": 1.00e-2},# 4.00e-3 in VeRA
-        "stsb": {"epochs": 80, "classifier_lr": 5.00e-3, "learning_rate": 5.00e-2},#1.00e-2 1.00e-2 in VeRA
+        "rte": {"epochs": 160, "classifier_lr": 1.00e-2, "learning_rate": 1.00e-2},  # 4.00e-3 in VeRA
+        "stsb": {"epochs": 80, "classifier_lr": 5.00e-3, "learning_rate": 5.00e-2},  # 1.00e-2 1.00e-2 in VeRA
     }
 
     # Settings for roberta-large
