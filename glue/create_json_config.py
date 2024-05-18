@@ -16,24 +16,24 @@ def generate_config(rank, task_name, model_name):
 
     # Settings for roberta-large
     large_task_settings = {
-        "sst2": {"epochs": 10, "classifier_lr": 6.00e-3, "learning_rate": 1.00e-2},
-        "mrpc": {"epochs": 40, "classifier_lr": 3.00e-3, "learning_rate": 3.00e-2},
+        "sst2": {"epochs": 10, "classifier_lr": 5.00e-3, "learning_rate": 5.00e-2},
+        "mrpc": {"epochs": 40, "classifier_lr": 5.00e-3, "learning_rate": 5.00e-2},
         "cola": {"epochs": 40, "classifier_lr": 6.00e-3, "learning_rate": 1.00e-2},
-        "qnli": {"epochs": 20, "classifier_lr": 2.00e-4, "learning_rate": 1.00e-2},
+        "qnli": {"epochs": 20, "classifier_lr": 1.00e-2, "learning_rate": 1.00e-2},
         "rte": {"epochs": 40, "classifier_lr": 2.00e-3, "learning_rate": 2.00e-2},
-        "stsb": {"epochs": 20, "classifier_lr": 2.00e-3, "learning_rate": 2.00e-2},
+        "stsb": {"epochs": 20, "classifier_lr": 1.00e-4, "learning_rate": 5.00e-3},
     }
 
     # Select appropriate settings based on the model name
     task_settings = large_task_settings if model_name == "roberta-large" else base_task_settings
     max_seq_len = 128 if model_name == "roberta-large" else 512
-    batch_size = 128 if model_name == "roberta-large" else 32  # Vera uses 32 bz x 4 gpus in roberta-large
+    batch_size = 32 if model_name == "roberta-large" else 32  # Vera uses 32 bz x 4 gpus in roberta-large
     shared_dim = 1024 if model_name == "roberta-large" else 768
 
     config = {
         "do_train": True,
         "do_eval": True,
-        "gradient_accumulation_steps": 8,
+        "gradient_accumulation_steps": 32,
         "output_dir": "./output/model",
         "overwrite_output_dir": True,
         "logging_steps": 10,
