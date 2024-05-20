@@ -54,7 +54,7 @@ def main():
     parser.add_argument(
         "--model", type=str, default="roberta-base", help="The model name or path (e.g., roberta-base, roberta-large)."
     )
-    parser.add_argument("--task", type=str, help="sst2 mrpc cola qnli rte or stsb.")
+    parser.add_argument("--task", type=str, default=None, help="sst2 mrpc cola qnli rte or stsb.")
     parser.add_argument("--epochs", type=int, default=2, help="Number of epochs.")
 
     lr_grid = [5e-3, 1e-3, 1e-2, 5e-2, 1e-4]
@@ -63,7 +63,11 @@ def main():
 
     for lr_head in lr_grid:
         for lr_lorta in lr_grid:
-            generate_config(args.rank, args.task, args.model, lr_head, lr_lorta, args.epochs)
+            if args.task is None:
+                for task in ["sst2", "mrpc", "cola", "qnli", "rte", "stsb"]:
+                    generate_config(args.rank, task, args.model, lr_head, lr_lorta, args.epochs)
+            else:
+                generate_config(args.rank, args.task, args.model, lr_head, lr_lorta, args.epochs)
 
 
 if __name__ == "__main__":
