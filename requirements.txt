@@ -13,3 +13,9 @@ pyyaml
 datasets
 psutil
 setuptools
+wandb
+datasets
+bitsandbytes
+evaluate
+shortuuid
+sentencepiece

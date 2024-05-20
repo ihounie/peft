@@ -23,11 +23,10 @@ def generate_config(rank, task_name, model_name):
         "rte": {"epochs": 40, "classifier_lr": 2.00e-3, "learning_rate": 2.00e-2},
         "stsb": {"epochs": 20, "classifier_lr": 2.00e-3, "learning_rate": 2.00e-2},
     }
-
     # Select appropriate settings based on the model name
     task_settings = large_task_settings if model_name == "roberta-large" else base_task_settings
     max_seq_len = 128 if model_name == "roberta-large" else 512
-    batch_size = 128 if model_name == "roberta-large" else 64  # Vera uses 32 bz x 4 gpus in roberta-large
+    batch_size = 64 if model_name == "roberta-large" else 64  # Vera uses 32 bz x 4 gpus in roberta-large
     shared_dim = 1024 if model_name == "roberta-large" else 768
 
     config = {
