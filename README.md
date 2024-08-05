@@ -21,14 +21,24 @@ limitations under the License.
 
 PEFT is integrated with Transformers for easy model training and inference, Diffusers for conveniently managing different adapters, and Accelerate for distributed training and inference for really big models.
 
+I have modified LoRA (`src/peft/tuners/lora`) to implement Low Rank Tensor Adapters (LoRTA). It can be found in `src/peft/tuners/lorta` folder.
+
+Migrating a training script from LoRa to LorTA should be as easy as changing `LoraConfig` by `LorTaConfig` and using 
+`LorTaLayer` (from peft.tuners.lorta) instead of `LoraLayer` (from peft.tuners.lora).
+
+In so far I have tested it with LLAMA-2-7B on Alpaca, when finetuning all linear modules at each layer ('q_proj', 'k_proj', 'v_proj', 'o_proj'), and roberta-base in GLUE using experiment scripts from the [VeRA paper](https://arxiv.org/abs/2310.11454) openreview submission, found in the folder `instruct` and `glue`.
+
+Supporting other models and tasks might require updating the `TRANSFORMERS_MODELS_TO_LORTA_QKVO_MAPPING` and `TRANSFORMERS_MODELS_TO_LORTA_TARGET_MODULES_MAPPING` in `src/peft/utils/constants.py`.
+
+
 > [!TIP]
 > Visit the [PEFT](https://huggingface.co/PEFT) organization to read about the PEFT methods implemented in the library and to see notebooks demonstrating how to apply these methods to a variety of downstream tasks. Click the "Watch repos" button on the organization page to be notified of newly implemented methods and notebooks!
 
-I also included experiment scripts from the [VeRA paper](https://arxiv.org/abs/2310.11454) openreview submission.
+I included experiment scripts from the [VeRA paper](https://arxiv.org/abs/2310.11454) openreview submission.
 
 ## Quickstart
 
-Install PEFT from pip:
+Install PEFT locally:
 
 ```bash
 pip install -r requirements.txt
@@ -38,5 +48,6 @@ pip install .
 Try an example:
     
 ```bash
-python instruct/lora_llama2_7b.sh
+cd instruct
+./lora_llama2_7b.sh
 ```

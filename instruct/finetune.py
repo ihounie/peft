@@ -150,7 +150,6 @@ def run(args):
     if args.quantize:
         model = AutoModelForCausalLM.from_pretrained(
             args.model,
-            load_in_4bit=True,
             torch_dtype=torch.bfloat16,
             device_map="auto",
             quantization_config=BitsAndBytesConfig(
