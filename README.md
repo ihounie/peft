@@ -30,12 +30,6 @@ In so far I have tested it with LLAMA-2-7B on Alpaca, when finetuning all linear
 
 Supporting other models and tasks might require updating the `TRANSFORMERS_MODELS_TO_LORTA_QKVO_MAPPING` and `TRANSFORMERS_MODELS_TO_LORTA_TARGET_MODULES_MAPPING` in `src/peft/utils/constants.py`.
 
-
-> [!TIP]
-> Visit the [PEFT](https://huggingface.co/PEFT) organization to read about the PEFT methods implemented in the library and to see notebooks demonstrating how to apply these methods to a variety of downstream tasks. Click the "Watch repos" button on the organization page to be notified of newly implemented methods and notebooks!
-
-I included experiment scripts from the [VeRA paper](https://arxiv.org/abs/2310.11454) openreview submission.
-
 ## Quickstart
 
 Install PEFT locally:
