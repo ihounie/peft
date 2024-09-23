@@ -643,7 +643,87 @@ class LorTaModel(BaseTuner):
         safe_merge: bool = False,
         adapter_names: Optional[list[str]] = None,
     ):
-        raise NotImplementedError
+        r"""
+        Internal method to merge the adapters into the base model and unload them.
+
+        Args:
+            merge (`bool`):
+                Whether to merge the adapters into the base model's weights.
+            progressbar (`bool`):
+                Whether to show a progress bar during the process.
+            safe_merge (`bool`):
+                Whether to perform a safety check for NaNs or Infs in the adapter weights.
+            adapter_names (`List[str]`, *optional*):
+                The list of adapter names to merge. If `None`, all active adapters are merged.
+
+        Returns:
+            `torch.nn.Module`: The merged model.
+        """
+        self._check_merge_allowed()
+
+        if adapter_names is None:
+            adapter_names = self.active_adapters
+
+        # Ensure adapter_names is a list
+        if isinstance(adapter_names, str):
+            adapter_names = [adapter_names]
+
+        # Collect modules to process
+        modules_to_process = []
+        for name, module in self.model.named_modules():
+            if isinstance(module, (LorTaLayer, LorTaLinear)):
+                #if module.active_adapter in adapter_names:
+                modules_to_process.append((name, module))
+
+        # Optionally use a progress bar
+        if progressbar:
+            from tqdm.auto import tqdm
+            modules_to_process = tqdm(modules_to_process, desc="Processing adapters", total=len(modules_to_process))
+
+        if merge:
+            # Compute the adapter weights
+            self.tensor_weights = self._compute_weights_from_tensor()
+
+            # Process modules
+            for name, module in modules_to_process:
+                # Get the base layer
+                base_module = module.base_layer
+                # Get the adapter weight
+                adapter_weight = self.tensor_weights.get(name, None)
+                if adapter_weight is not None:
+                    # Perform safe merge check if requested
+                    if safe_merge:
+                        if torch.isnan(adapter_weight).any() or torch.isinf(adapter_weight).any():
+                            raise ValueError(f"NaN or Inf detected in adapter weights for module {name}")
+
+                    # Merge the adapter weight into the base weight
+                    base_module.weight.data += adapter_weight.to(base_module.weight.device) * module.scaling["default"]
+                # Replace the module with the base_layer
+                parent, _, target_name = _get_submodules(self.model, name)
+                setattr(parent, target_name, base_module)
+        else:
+            # If not merging, simply replace the modules with their base layers
+            for name, module in modules_to_process:
+                base_module = module.base_layer
+                parent, _, target_name = _get_submodules(self.model, name)
+                setattr(parent, target_name, base_module)
+
+        # Remove the adapter parameters
+        for param_name in ['lora_A', 'lora_B', 'lora_C_l', 'lora_C_h', 'lora_C_m']:
+            if hasattr(self.model, param_name):
+                delattr(self.model, param_name)
+
+        # Set requires_grad=False for all parameters
+        for param in self.model.parameters():
+            param.requires_grad = False
+
+        # Remove the adapters from peft_config
+        for adapter_name in adapter_names:
+            if adapter_name in self.peft_config:
+                del self.peft_config[adapter_name]
+
+        return self.model
+
 
     def add_weighted_adapter(
         self,
@@ -700,11 +780,35 @@ class LorTaModel(BaseTuner):
     def merge_and_unload(
         self, progressbar: bool = False, safe_merge: bool = False, adapter_names: Optional[list[str]] = None
     ) -> torch.nn.Module:
-        raise NotImplementedError
+        r"""
+        This method merges the LoRTA adapters into the base model and unloads them. This is useful when you want to use
+        the base model as a standalone model without the adapter layers.
 
-    def unload(self) -> torch.nn.Module:
+        Args:
+            progressbar (`bool`):
+                Whether to show a progress bar indicating the merge and unload process.
+            safe_merge (`bool`):
+                Whether to perform a safety check for NaNs or Infs in the adapter weights before merging.
+            adapter_names (`List[str]`, *optional*):
+                The list of adapter names that should be merged. If `None`, all active adapters will be merged.
+                Defaults to `None`.
+
+        Returns:
+            `torch.nn.Module`: The merged model.
+
+        Example:
+
+        ```py
+        >>> from transformers import AutoModelForCausalLM
+        >>> from peft import LorTaModel, LorTaConfig
+
+        >>> base_model = AutoModelForCausalLM.from_pretrained("tiiuae/falcon-40b")
+        >>> lorta_config = LorTaConfig(...)
+        >>> model = LorTaModel(base_model, lorta_config)
+        >>> merged_model = model.merge_and_unload()
+        ```
         """
-        Gets back the base model by removing all the lora modules without merging. This gives back the original base
-        model.
-        """
-        raise NotImplementedError
+        return self._unload_and_optionally_merge(
+            merge=True, progressbar=progressbar, safe_merge=safe_merge, adapter_names=adapter_names
+        )
+        
